@@ -1,0 +1,72 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="style.css">
+        
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    </head>
+    <!--<body style="font: 26px/20px sans-serif;line-height: 135%;">-->
+    <body>
+        <div class="container">
+            <div class="time">{{time}}</div>
+            <p class="location">{{practice.location}}</p>
+            <p class="message">{{practice.message}}</p>
+            <hr>
+            <div class="row">
+                <div class="ins col-md-6">
+                    <h4>In <span class="number">{{ins.length}}</span></h4>
+                    <table>
+                        {{#ins}}
+                        <tr>
+                            <td>
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </td>
+                            <td style="font-weight:bold;">
+                                {{username}}
+                            </td>
+                            <td>
+                                {{message}}
+                            </td>
+                        </tr>
+                        {{/ins}}
+                    </table>
+                </div>
+                <div class="outs col-md-6">
+                    <h4>Out <span class="number">{{outs.length}}</span></h4>
+                    <table>
+                        {{#outs}}
+                        <tr>
+                            <td>
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </td>
+                            <td style="font-weight:bold;">
+                                {{username}}
+                            </td>
+                            <td>
+                                {{message}}
+                            </td>
+                        </tr>
+                        {{/outs}}
+                    </table>
+                </div>
+            </div>
+            {{#unknown.length}}
+            <hr>
+            <div>
+                <div class="unknown">
+                    <h4>No Reply <span class="number">{{unknown.length}}</span></h4>
+                    <div>
+                        {{#unknown}}
+                            {{username}}
+                        {{/unknown}}
+                    </div>
+                </div>
+            </div>
+            {{/unknown.length}}
+        </div>
+    </body>
+</html>
