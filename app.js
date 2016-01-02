@@ -49,7 +49,7 @@ var practice = function (req, res, next) {
         var botPayload = {};
         var viewUrl = '<https://mit-ult-slack.herokuapp.com/practice?id=' + id + '|Responses>';
         var usage = "(Reply with /in or /out [reason])";
-        botPayload.text = printTime(starttime, endtime) + "\n" + practiceLocation + "\n" + description + "\n" + viewUrl + "\n" + usage;
+        botPayload.text = printTime(starttime, endtime) + "\n" + practiceLocation + "\n" + '<!channel>: ' + description + "\n" + viewUrl + "\n" + usage;
         var path = process.env.SLACK_SERVICE_PATH;
         var uri = 'https://hooks.slack.com/services' + path;
 
