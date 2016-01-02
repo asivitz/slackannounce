@@ -83,32 +83,34 @@ var printTime = function(starttime, endtime) {
 
 var view_practice = function(req, res, next) {
     var prac_num = req.query['id'];
-    db.one("SELECT * from practices where id = $1 limit 1", [prac_num]).then(function(practice) {
-        return db.many("SELECT * from replies where practiceid = $1", [prac_num]).then(function(replies) {
-            var starttime = practice.starttime;
-            var endtime = practice.endtime;
-            var timestring = printTime(starttime, endtime);
-            var ins = replies.filter(function(row) {
-                return row.status == 'in';
-            });
-            var outs = replies.filter(function(row) {
-                return row.status == 'out';
-            });
+    db.task(function(task) {
+        return task.one("SELECT * from practices where id = $1 limit 1", [prac_num]).then(function(practice) {
+            return task.many("SELECT * from replies where practiceid = $1", [prac_num]).then(function(replies) {
+                var starttime = practice.starttime;
+                var endtime = practice.endtime;
+                var timestring = printTime(starttime, endtime);
+                var ins = replies.filter(function(row) {
+                    return row.status == 'in';
+                });
+                var outs = replies.filter(function(row) {
+                    return row.status == 'out';
+                });
 
-            return db.many("select distinct username from replies").then(function(usernames) {
-                var out_usernames = outs.map(function(a) { return a.username; });
-                var in_usernames = ins.map(function(a) { return a.username; });
-                var excluded = [];
-                var all = usernames.filter(function(row) {
-                    return in_usernames.indexOf(row.username) == -1 &&
-                        out_usernames.indexOf(row.username) == -1 &&
-                        excluded.indexOf(row.username) == -1;
-                        });
-                respondWithPage(res, "practice_page.html", { time: timestring, practice: practice, ins: ins, outs: outs, unknown: all });
+                return task.many("select distinct username from replies").then(function(usernames) {
+                    var out_usernames = outs.map(function(a) { return a.username; });
+                    var in_usernames = ins.map(function(a) { return a.username; });
+                    var excluded = [];
+                    var all = usernames.filter(function(row) {
+                        return in_usernames.indexOf(row.username) == -1 &&
+                            out_usernames.indexOf(row.username) == -1 &&
+                            excluded.indexOf(row.username) == -1;
+                            });
+                    respondWithPage(res, "practice_page.html", { time: timestring, practice: practice, ins: ins, outs: outs, unknown: all });
+                });
             });
+        }).catch(function(err) {
+            res.status(400).send("Can't load practice. Err: " + err);
         });
-    }).catch(function(err) {
-        res.status(400).send("Can't load practice. Err: " + err);
     }).done();
 };
 
@@ -119,19 +121,21 @@ var status_func = function(type) {
         if (type == 'out' && !message) {
             return res.status(200).send("You must supply a reason why you can't make it.");
         }
-        db.one("SELECT * FROM practices ORDER BY starttime DESC LIMIT 1").then(function(practice) {
-            var id = practice.id;
-            return db.oneOrNone("SELECT username from replies where practiceid = $1 and username = $2", [id, userName]).then(function(reply) {
-                if (reply) {
-                    return db.none("UPDATE replies SET status = $1, message = $2 where practiceid = $3 and username = $4", [type, message, id, userName]);
-                } else {
-                    return db.none("INSERT INTO REPLIES VALUES ($1,$2,$3,$4)", [id,userName,message,type]);
-                }
+        db.task(function(task) {
+            return task.one("SELECT * FROM practices ORDER BY starttime DESC LIMIT 1").then(function(practice) {
+                var id = practice.id;
+                return task.oneOrNone("SELECT username from replies where practiceid = $1 and username = $2", [id, userName]).then(function(reply) {
+                    if (reply) {
+                        return task.none("UPDATE replies SET status = $1, message = $2 where practiceid = $3 and username = $4", [type, message, id, userName]);
+                    } else {
+                        return task.none("INSERT INTO REPLIES VALUES ($1,$2,$3,$4)", [id,userName,message,type]);
+                    }
+                });
+            }).catch(function(err) {
+                next(err);
+            }).then(function() {
+                return res.status(200).send("You're " + type + "!").end();
             });
-        }).catch(function(err) {
-            next(err);
-        }).then(function() {
-            return res.status(200).send("You're " + type + "!").end();
         }).done();
     };
 };
