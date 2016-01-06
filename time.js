@@ -31,4 +31,6 @@ function parseTimes(timestr) {
 }
 
 
-module.exports = parseTimes;
+module.exports = {
+    parseTimes: parseTimes
+};
