@@ -85,7 +85,7 @@ var view_practice = function(req, res, next) {
     var prac_num = req.query['id'];
     db.task(function(task) {
         return task.one("SELECT * from practices where id = $1 limit 1", [prac_num]).then(function(practice) {
-            return task.many("SELECT * from replies where practiceid = $1", [prac_num]).then(function(replies) {
+            return task.manyOrNone("SELECT * from replies where practiceid = $1", [prac_num]).then(function(replies) {
                 var starttime = practice.starttime;
                 var endtime = practice.endtime;
                 var timestring = printTime(starttime, endtime);
