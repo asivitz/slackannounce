@@ -96,14 +96,14 @@ var view_practice = function(req, res, next) {
                     return row.status == 'out';
                 });
 
-                return task.many("select distinct username from replies").then(function(usernames) {
+                return task.manyOrNone("SELECT id FROM practices ORDER BY id DESC LIMIT 10").then(function(ids) {
+                    return task.manyOrNone("SELECT DISTINCT username FROM replies WHERE practiceid IN ($1^)", pgp.as.csv(ids.map(x => x.id)));
+                }).then(function(usernames) {
                     var out_usernames = outs.map(function(a) { return a.username; });
                     var in_usernames = ins.map(function(a) { return a.username; });
-                    var excluded = [];
                     var all = usernames.filter(function(row) {
                         return in_usernames.indexOf(row.username) == -1 &&
-                            out_usernames.indexOf(row.username) == -1 &&
-                            excluded.indexOf(row.username) == -1;
+                            out_usernames.indexOf(row.username) == -1;
                             });
                     respondWithPage(res, "practice_page.html", { time: timestring, practice: practice, ins: ins, outs: outs, unknown: all });
                 });
