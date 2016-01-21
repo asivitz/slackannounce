@@ -10,6 +10,7 @@
     "body-parser": "~1.10.1",
     "datejs": "~1.0.0-rc3",
     "express": "~4.11.0",
+    "lodash": "^4.0.0",
     "log": "~1.4.0",
     "mustache": "~1.0.0",
     "pg-promise": "^2.8.5",
@@ -19,6 +20,5 @@
   },
   "author": "",
   "license": "BSD-2-Clause",
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }

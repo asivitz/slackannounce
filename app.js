@@ -5,6 +5,9 @@ var fs = require("fs");
 var Mustache = require("mustache");
 var q = require("q");
 var time = require("./time");
+var https = require('https');
+var _ = require('lodash');
+
 
 function send(uri, payload, callback) {
   request({
@@ -28,6 +31,12 @@ var pgp = require('pg-promise')({
 
 var db = pgp(process.env.DATABASE_URL);
 
+var users;
+/* Get slack user names */
+request("https://slack.com/api/users.list?token=" + process.env.SLACK_TOKEN, function(err, response, body) {
+    var data = JSON.parse(body);
+    users = _.fromPairs(data.members.map(user => [user.name, user.profile.real_name]));
+});
 
 // /* Slash command format: /practice 1/24 3-5pm | Barry | throwing and drills */
 var practice = function (req, res, next) {
@@ -86,6 +95,7 @@ var view_practice = function(req, res, next) {
     db.task(function(task) {
         return task.one("SELECT * from practices where id = $1 limit 1", [prac_num]).then(function(practice) {
             return task.manyOrNone("SELECT * from replies where practiceid = $1", [prac_num]).then(function(replies) {
+                replies = replies.map(x => _.merge({}, x, {display: users[x.username] || x.username}));
                 var starttime = practice.starttime;
                 var endtime = practice.endtime;
                 var timestring = printTime(starttime, endtime);
@@ -99,13 +109,20 @@ var view_practice = function(req, res, next) {
                 return task.manyOrNone("SELECT id FROM practices ORDER BY id DESC LIMIT 10").then(function(ids) {
                     return task.manyOrNone("SELECT DISTINCT username FROM replies WHERE practiceid IN ($1^)", pgp.as.csv(ids.map(x => x.id)));
                 }).then(function(usernames) {
+                    usernames = usernames.map(x => _.merge({}, x, {display: users[x.username] || x.username}));
                     var out_usernames = outs.map(function(a) { return a.username; });
                     var in_usernames = ins.map(function(a) { return a.username; });
+                    console.log(usernames);
                     var all = usernames.filter(function(row) {
                         return in_usernames.indexOf(row.username) == -1 &&
                             out_usernames.indexOf(row.username) == -1;
                             });
-                    respondWithPage(res, "practice_page.html", { time: timestring, practice: practice, ins: ins, outs: outs, unknown: all });
+                    console.log(all);
+                    respondWithPage(res, "practice_page.html", { time: timestring, practice: practice,
+                        ins: ins,
+                        outs: outs,
+                        unknown: all
+                    });
                 });
             });
         }).catch(function(err) {
